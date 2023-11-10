@@ -5,11 +5,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Optional;
 
-public class MultiThrededServer implements AutoCloseable {
+public class MultiThreadedServer implements AutoCloseable {
     private final ServerSocket serverSocket;
     private boolean isClosed;
 
-    public MultiThrededServer(int port) throws IOException {
+    public MultiThreadedServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
     }
 

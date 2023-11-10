@@ -1,13 +1,9 @@
 package ua.ithillel.threads;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ua.ithillel.io.server.MultiThrededServer;
+import ua.ithillel.io.server.ExecutorServiceServer;
+import ua.ithillel.io.server.MultiThreadedServer;
 import ua.ithillel.threads.counter.Counter;
-import ua.ithillel.threads.mult.MyRunnable;
-import ua.ithillel.threads.mult.MyThread;
-import ua.ithillel.threads.shape.Circle;
-import ua.ithillel.threads.shape.Shape;
-import ua.ithillel.threads.shape.Square;
 import ua.ithillel.translator.Message;
 import ua.ithillel.translator.MessageQueue;
 import ua.ithillel.translator.Receiver;
@@ -17,11 +13,330 @@ import ua.ithillel.translator.client.TranslatorClient;
 
 import java.io.*;
 import java.net.http.HttpClient;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
-import java.util.function.Function;
+import java.util.concurrent.*;
 
 public class Application {
+    private static volatile int value; // from and to RAM
+    private static volatile boolean ready; // from and to RAM
+
     public static void main(String[] args) {
+
+//        final List<Future> tasks = Executors.newSingleThreadExecutor().invokeAll(task);
+        List<Future> results = new ArrayList<>();
+
+        while (results.size() > 0) {
+            for (Future result:
+                 results) {
+
+                if (result.isDone()) {
+                    results.remove(result);
+                }
+            }
+        }
+
+
+        try (final ExecutorServiceServer executorServiceServer
+                     = new ExecutorServiceServer(8080, 2);) {
+
+            executorServiceServer.start();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
+        try {
+
+            Callable<Integer> randC1 = () -> (int)(100 * Math.random());
+            Callable<Integer> randC2 = () -> (int)(100 * Math.random());
+            Callable<Integer> randC3 = () -> (int)(100 * Math.random());
+            Callable<Integer> randC4 = () -> (int)(100 * Math.random());
+            Callable<Integer> randC5 = () -> (int)(100 * Math.random());
+
+            List<Callable<Integer>> tasks = List.of(randC1, randC2, randC3, randC4, randC5);
+
+            final ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+            final List<Future<Integer>> futures = executorService.invokeAll(tasks);
+
+            for (Future<Integer> result:
+                 futures) {
+                System.out.println(result.get());
+            }
+
+//            executorService.shutdown();
+            final List<Runnable> runnables = executorService.shutdownNow();
+
+//            final Future<Integer> result1 = executorService.submit(randC1);
+//            final Future<Integer> result2 = executorService.submit(randC2);
+//            final Future<Integer> result3 = executorService.submit(randC3);
+//            final Future<Integer> result4 = executorService.submit(randC4);
+//            final Future<Integer> result5 = executorService.submit(randC5);
+
+
+
+//            final CountDownLatch countDownLatch = new CountDownLatch(2);
+
+//            Callable<String> c1 = () -> {
+//                try (InputStream in = Application.class
+//                        .getClassLoader()
+//                        .getResourceAsStream("file1.txt");
+//
+//                     Reader rd = new InputStreamReader(in);
+//                     BufferedReader br = new BufferedReader(rd);
+//                ) {
+//
+//                    return br.lines().reduce((acc, cur) -> acc + cur + "\n").orElse("");
+//
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                } finally {
+//                    countDownLatch.countDown();
+//                }
+//            };
+//
+//            Callable<String> c2 = () -> {
+//                try (InputStream in = Application.class
+//                        .getClassLoader()
+//                        .getResourceAsStream("file2.txt");
+//
+//                     Reader rd = new InputStreamReader(in);
+//                     BufferedReader br = new BufferedReader(rd);
+//                ) {
+//
+//                    return br.lines().reduce((acc, cur) -> acc + cur + "\n").orElse("");
+//
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                } finally {
+//                    countDownLatch.countDown();
+//                }
+//            };
+//
+//            final FutureTask<String> task1 = new FutureTask<>(c1);
+//            final FutureTask<String> task2 = new FutureTask<>(c2);
+//
+//            new Thread(task1).start();
+//            new Thread(task2).start();
+//
+//            String text1 = null;
+//            while (true) {
+//                if (task1.isDone()) {
+//                    text1 = task1.get();
+//                    break;
+//                } else {
+//                    System.out.println("Task 1 is not done yet");
+//                    Thread.sleep(1);
+//                }
+//            }
+//
+//            String text2 = null;
+//            while (true) {
+//                if (task2.isDone()) {
+//                    text2 = task2.get();
+//                    break;
+//                } else {
+//                    System.out.println("Task 2 is not done yet");
+//                    Thread.sleep(1);
+//                }
+//
+//            }
+//
+//            System.out.println("Text: " + text1 + text2);
+
+
+
+//            final CountDownLatch countDownLatch = new CountDownLatch(2);
+//
+//            StringBuffer buf1 = new StringBuffer();
+//            StringBuffer buf2 = new StringBuffer();
+//
+//            Runnable r1 = () -> {
+//                try (InputStream in = Application.class
+//                        .getClassLoader()
+//                        .getResourceAsStream("file1.txt");
+//
+//                     Reader rd = new InputStreamReader(in);
+//                     BufferedReader br = new BufferedReader(rd);
+//                ) {
+//
+//                    br.lines().forEach(line -> buf1.append(line + "\n"));
+//
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                } finally {
+//                    countDownLatch.countDown();
+//                }
+//            };
+//
+//            Runnable r2 = () -> {
+//                try (InputStream in = Application.class
+//                        .getClassLoader()
+//                        .getResourceAsStream("file2.txt");
+//
+//                     Reader rd = new InputStreamReader(in);
+//                     BufferedReader br = new BufferedReader(rd);
+//                ) {
+//
+//                    br.lines().forEach(line -> buf2.append(line + "\n"));
+//
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                } finally {
+//                    countDownLatch.countDown();
+//                }
+//            };
+//
+//            Thread t1 = new Thread(r1);
+//            Thread t2 = new Thread(r2);
+//
+//            t1.start();
+//            t2.start();
+//
+//            final boolean await = countDownLatch.await(1, TimeUnit.SECONDS);
+//            System.out.println(buf1.append(buf2));
+
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
+
+//
+//        t1.join();
+//        t2.join();
+
+//        try {
+//            final CountDownLatch countDownLatch = new CountDownLatch(2);
+//
+//            final Thread t1 = new Thread(() -> {
+//                for (int i = 0; i < 200_000; i++) {
+//                    System.out.println("t1: " + i);
+//                }
+//
+//                countDownLatch.countDown();
+//            });
+//
+//            final Thread t2 = new Thread(() -> {
+//                for (int i = 0; i < 200_000; i++) {
+//                    System.out.println("t1: " + i);
+//                }
+//
+//                countDownLatch.countDown();
+//            });
+//
+//            t1.start();
+//            t2.start();
+//
+//            countDownLatch.await();
+//
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//
+//        }
+//        final MutexCounter mutexCounter = new MutexCounter();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("t1: " + mutexCounter.incrementAndGet());
+//            }
+//        }).start();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("reader 1: " + mutexCounter.get());
+//            }
+//        }).start();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("reader 2: " + mutexCounter.get());
+//            }
+//        }).start();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("reader 3: " + mutexCounter.get());
+//            }
+//        }).start();
+
+//        final MutexCounter mutexCounter = new MutexCounter();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("t1: " + mutexCounter.incrementAndGet());
+//            }
+//        }).start();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("t2: " + mutexCounter.incrementAndGet());
+//            }
+//        }).start();
+
+
+
+//        new Thread(() -> {
+//           while (!ready) {
+//               Thread.yield(); // set to Runnable
+//           }
+//
+//            System.out.println("T1 value: " + value);
+//        }).start();
+//
+//
+//        value = 34;
+//        ready = true;
+//
+//
+
+//        final AtomicCounter atomicCounter = new AtomicCounter();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("t1: " + atomicCounter.incrementAndGet());
+//            }
+//        }).start();
+//
+//        new Thread(() -> {
+//            for (int i = 0; i < 200_000; i++) {
+//                System.out.println("t2: " + atomicCounter.incrementAndGet());
+//            }
+//        }).start();
+
+
+//        Runnable runnable = () -> {
+//            try {
+//                while (true) {
+//                    System.out.println("Never ending task");
+//                    Thread.sleep(1000);
+//                }
+//            } catch (InterruptedException e) {
+//                throw new RuntimeException(e);
+//            }
+//        };
+//
+//
+//        final Thread thread = new Thread(runnable);
+//        thread.setDaemon(true);
+//        thread.start();
+
+
+//        final Thread t11 = new Thread(() -> {
+//            System.out.println("T1");
+//        });
+//
+//        t11.start();
+
+        // Scheduler
 
         MessageQueue queue = new MessageQueue();
         Sender sender = new Sender(queue);
@@ -49,7 +364,7 @@ public class Application {
 
         System.out.println("Application starts...");
 
-        try(MultiThrededServer server = new MultiThrededServer(8080)) {
+        try(MultiThreadedServer server = new MultiThreadedServer(8080)) {
             server.start();
 
 
