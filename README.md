@@ -7,3 +7,8 @@
 - `synchronized` blocks
 - Sender-Receiver example
 ![](https://docs.firstdecode.com/wp-content/uploads/2019/08/MSA_CompetingConsumersPattern3.png)
+- Atomic data types
+- Mutex (ReentrantLock, ReadWriteLock)
+- Semaphore
+- CountDownLatch
+- ExecutorService
